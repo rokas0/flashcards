@@ -95,8 +95,17 @@ controller.hears('hello', 'direct_message', function (bot, message) {
 	bot.reply(message, 'Hello!');
 });
 
-//TODO Add to match only beginning on add
-controller.hears(['add *'], 'direct_message', function (bot, message) {
+let currentDeck = "Default";
+
+controller.hears(['Change deck to'], 'direct_message', function (bot, message) {
+	console.log(message);
+	//TODO Better extract deck
+	currentDeck = message.text.substring(15).toLowerCase();
+	bot.reply(message, 'Got you! Changed the deck to '+currentDeck);
+});
+
+
+controller.hears(['add'], 'direct_message', function (bot, message) {
 	console.log(message);
 
 	//TODO Make URL dynamic using Docker
@@ -105,22 +114,26 @@ controller.hears(['add *'], 'direct_message', function (bot, message) {
 	const getLocation = async url => {
 		try {
 			const qs = require('qs');
-			const response = await axios.post(url, qs.stringify({ 'flashcard': message.text.substring(4) }));
+			const response = await axios.post(url, qs.stringify({
+				'flashcard': message.text.substring(4),
+				'deck': currentDeck,
+				'user': message.user,
+			}));
 			const data = response.data;
 			console.log(data);
 			if (data.success) {
-				bot.reply(message, "Added! "+JSON.stringify(data));
+				bot.reply(message, "Added! " + JSON.stringify(data));
 			} else {
-				bot.reply(message, "Failed :( Err: "+JSON.stringify(data));
+				bot.reply(message, "Failed :( Err: " + JSON.stringify(data));
 			}
 		} catch (error) {
 			console.log(error);
 		}
-    };
+	};
 
-    bot.reply(message, getLocation(url));
+	bot.reply(message, getLocation(url));
 
-    console.log('Test±');
+	console.log('Test±');
 });
 
 /*
@@ -135,18 +148,18 @@ TODO:
  * AN example of what could be:
  * Any un-handled direct mention gets a reaction and a pat response!
  */
-//controller.on('direct_message,mention,direct_mention', function (bot, message) {
-//    bot.api.reactions.add({
-//        timestamp: message.ts,
-//        channel: message.channel,
-//        name: 'robot_face',
-//    }, function (err) {
-//        if (err) {
-//            console.log(err)
-//        }
-//        bot.reply(message, 'I heard you loud and clear boss.');
-//    });
-//});
+controller.on('direct_message,mention,direct_mention', function (bot, message) {
+	bot.api.reactions.add({
+		timestamp: message.ts,
+		channel: message.channel,
+		name: 'robot_face',
+	}, function (err) {
+		if (err) {
+			console.log(err)
+		}
+		bot.reply(message, 'I heard you loud and clear boss.');
+	});
+});
 
 
 

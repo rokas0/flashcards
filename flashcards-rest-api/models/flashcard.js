@@ -5,9 +5,11 @@ let FlashcardSchema = new dynamoose.Schema({
     type: String,
     hashKey: true,
   },
-  timestamp: String,
+	user: String,
+	deck: String,
 	side0: String,
 	side1: String,
+	test: Boolean,
 }, {
 	throughput: {
 		read: 1,
@@ -18,7 +20,7 @@ let FlashcardSchema = new dynamoose.Schema({
 });
 
 FlashcardSchema.statics.getAll = async function(cb){
-  let results = await this.scan().exec()
+  let results = await this.scan().exec();
   while (results.lastKey){
       results = await this.scan().startKey(results.startKey).exec()
   }
