@@ -101,7 +101,7 @@ controller.hears(['add *'], 'direct_message', function (bot, message) {
 
 	//TODO Make URL dynamic using Docker
 	const url =
-		"http://flashcardsapp_rest_app_1:3000/v1/flashcards?mode=separator";
+		"http://flashcards_rest_app_1:3000/v1/flashcards?mode=separator";
 	const getLocation = async url => {
 		try {
 			const qs = require('qs');
