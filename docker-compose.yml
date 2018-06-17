@@ -1,0 +1,18 @@
+version: '3'
+services:
+  rest_app:
+    build: ./flashcards-rest-api/
+    env_file:
+     - ~/.awsAndSlack/env.env
+    environment:
+     - PORT=3000
+    ports:
+     - "3000:3000"
+  bot_app:
+    build: ./flashcards-bot-petras/
+    env_file:
+     - ~/.awsAndSlack/env.env
+    environment:
+     - PORT=4000
+    ports:
+     - "4000:4000"
