@@ -1,0 +1,34 @@
+{
+  "name": "flashcards-bot-petras",
+  "version": "0.0.1",
+  "description": "The awesomest bot evar.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rokas0/easy-peasy-bot-app.git"
+  },
+  "keywords": [
+    "slack",
+    "bot"
+  ],
+  "author": "Osvaldas Rokas",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rokas0/easy-peasy-bot-app/issues"
+  },
+  "homepage": "https://github.com/rokas0/easy-peasy-bot-app#readme",
+  "engines": {
+    "node": "5.1.1"
+  },
+  "dependencies": {
+    "axios": "^0.18.0",
+    "botkit": "0.2.2",
+    "botkit-storage-mongo": "^1.0.2",
+    "mongodb": "^1.4.39",
+    "qs": "^6.5.2"
+  }
+}
