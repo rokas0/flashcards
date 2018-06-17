@@ -1,0 +1,8 @@
+{
+	"FlashcardsPutFunction": {
+		"DYNAMO_TABLE": "flashcards"
+	},
+	"FlashcardsGetFunction": {
+		"DYNAMO_TABLE": "flashcards"
+	}
+}

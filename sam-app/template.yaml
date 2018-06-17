@@ -1,0 +1,62 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: "SAM APP"
+
+Globals: # any parameters you want available to all your resources
+    Function:
+        Runtime: nodejs8.10 # language used at runtime
+        Timeout: 180 # timeout for a given lambda function execution
+        Environment:
+            Variables: # these will be important later
+                DYNAMO_TABLE: !Ref DynamoFlashcardTable
+                DB_ENDPOINT: http://dynamodb.us-east-1.amazonaws.com
+                REGION_NAME: eu-west-1
+
+Resources:
+    FlashcardsGetFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: flashcard/
+            Handler: flashcardGet.lambdaHandler
+            Policies: AmazonDynamoDBFullAccess
+            Events:
+                flashcard:
+                    Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+                    Properties:
+                        Path: /flashcard
+                        Method: get
+    FlashcardsPutFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: flashcard/
+            Handler: flashcardPut.lambdaHandler
+            Policies: AmazonDynamoDBFullAccess
+            Events:
+                flashcard:
+                    Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+                    Properties:
+                        Path: /flashcard
+                        Method: put
+    FlashcardsCsvFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: flashcard/
+            Handler: csvExport.lambdaHandler
+            Policies: AmazonDynamoDBFullAccess
+            Events:
+                flashcard:
+                    Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+                    Properties:
+                        Path: /csvExport
+                        Method: get
+    DynamoFlashcardTable:
+        Type: AWS::Serverless::SimpleTable # if you want to define a more complex table, use AWS::DynamoDB::Table
+        Properties:
+            PrimaryKey:
+                Name: uuid
+                Type: String
+            ProvisionedThroughput:
+                ReadCapacityUnits: 1
+                WriteCapacityUnits: 1
+            Tags:
+                AppType: Serverless

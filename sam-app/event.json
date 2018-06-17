@@ -1,0 +1,45 @@
+{
+	resource: '/flashcard',
+	path: '/flashcard',
+	httpMethod: 'PUT',
+	headers: {
+		'CloudFront-Forwarded-Proto': 'https',
+		'CloudFront-Is-Desktop-Viewer': 'true',
+		'X-Forwarded-Proto': 'https'
+	},
+	multiValueHeaders: {
+		'CloudFront-Is-Desktop-Viewer': ['true'],
+		'CloudFront-Is-Mobile-Viewer': ['false'],
+		'CloudFront-Is-SmartTV-Viewer': ['false'],
+		'CloudFront-Is-Tablet-Viewer': ['false'],
+		'CloudFront-Viewer-Country': ['GB'],
+	},
+	queryStringParameters: {
+		deck: 'Default'
+	},
+	multiValueQueryStringParameters: {
+		deck: ['Default']
+	},
+	pathParameters: null,
+	stageVariables: null,
+	requestContext: {
+		resourcePath: '/flashcard',
+		httpMethod: 'PUT',
+		protocol: 'HTTP/1.1',
+		stage: 'Prod',
+		identity: {
+			cognitoIdentityPoolId: null,
+			accountId: null,
+			cognitoIdentityId: null,
+			caller: null,
+			accessKey: null,
+			cognitoAuthenticationType: null,
+			cognitoAuthenticationProvider: null,
+			userArn: null,
+			userAgent: null,
+			user: null
+		},
+	},
+	body: 'asfdsaf\nfasdfsdaf----asdfasdfasdf\nasfsadffsad---asdffasdf',
+	isBase64Encoded: false
+}

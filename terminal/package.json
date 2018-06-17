@@ -1,0 +1,22 @@
+{
+  "name": "terminal",
+  "version": "0.0.1",
+  "description": "",
+  "main": "flashcard.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lintfix": "./node_modules/.bin/eslint --fix ."
+  },
+  "author": "Rokaso",
+  "license": "ISC",
+  "dependencies": {
+    "request": "^2.88.0",
+    "request-promise": "^4.2.2",
+    "yargs": "^12.0.5"
+  },
+  "devDependencies": {
+    "eslint": "^5.13.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.16.0"
+  }
+}
