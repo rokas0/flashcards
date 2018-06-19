@@ -3,13 +3,20 @@
 const SEPARATOR = '---';
 
 module.exports.separator = function (separatedString) {
-	const flashcardSides = separatedString.split(SEPARATOR);
+	if (typeof separatedString !== 'undefined' && separatedString != null) {
+		const flashcardSides = separatedString.split(SEPARATOR);
 
-	//TODO Improve to allow more sides
-	return {
-		side0: flashcardSides[0],
-		side1: flashcardSides.slice(1).join(SEPARATOR)
-	};
+		//TODO Improve to allow more sides
+		return {
+			side0: flashcardSides[0],
+			side1: flashcardSides.slice(1).join(SEPARATOR)
+		};
+	} else {
+		return {
+			side0: "",
+			side1: "",
+		}
+	}
 };
 
 module.exports.convertToAnki = function (data, deck) {

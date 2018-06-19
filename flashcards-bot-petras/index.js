@@ -1,9 +1,24 @@
 const axios = require("axios");
-
-/**
- * A Bot for Slack!
- */
-
+const qs = require('qs');
+const winston = require('winston');
+const logger = winston.createLogger({
+	level: 'debug',
+	format: winston.format.json(),
+	transports: [
+	  new winston.transports.File({ filename: '../logs/flashcards-bot-petras.log' })
+	]
+  });
+  
+  //
+  // If we're not in production then log to the `console` with the format:
+  // `${info.level}: ${info.message} JSON.stringify({ ...rest }) `
+  // 
+  if (process.env.NODE_ENV !== 'production') {
+	logger.add(new winston.transports.Console({
+	  format: winston.format.simple()
+	}));
+  }
+  
 
 /**
  * Define a function for initiating a conversation on installation
@@ -88,59 +103,73 @@ controller.on('rtm_close', function (bot) {
 // BEGIN EDITING HERE!
 
 controller.on('bot_channel_join', function (bot, message) {
-	bot.reply(message, "I'm here!")
+	bot.reply(message, "I'm here!");
 });
 
 controller.hears('hello', 'direct_message', function (bot, message) {
-	bot.reply(message, 'Hello!');
+	bot.reply(message, 'Hello! You can use:\n * Check deck to [deck]\nadd [your card with --- separator]\nsubmit bulk [newline separated flashcards with --- in between]');
 });
 
 let currentDeck = "Default";
 
 controller.hears(['Change deck to'], 'direct_message', function (bot, message) {
-	console.log(message);
+	logger.debug(message);
 	//TODO Better extract deck
 	currentDeck = message.text.substring(15).toLowerCase();
 	bot.reply(message, 'Got you! Changed the deck to '+currentDeck);
 });
 
-
-controller.hears(['add'], 'direct_message', function (bot, message) {
-	console.log(message);
-
-	//TODO Make URL dynamic using Docker
-	const url =
-		"http://flashcards_rest_app_1:3000/v1/flashcards?mode=separator";
-	const getLocation = async url => {
-		try {
-			const qs = require('qs');
-			const response = await axios.post(url, qs.stringify({
-				'flashcard': message.text.substring(4),
-				'deck': currentDeck,
-				'user': message.user,
-			}));
-			const data = response.data;
-			console.log(data);
-			if (data.success) {
-				bot.reply(message, "Added! " + JSON.stringify(data));
-			} else {
-				bot.reply(message, "Failed :( Err: " + JSON.stringify(data));
-			}
-		} catch (error) {
-			console.log(error);
+//TODO Make URL dynamic using Docker
+const url =
+	"http://flashcards_rest_app_1:3000/v1/flashcards?mode=separator";
+	
+const addFlashcard = async (url, data) => {
+	logger.debug("addFlashcard beginning: "+url+": data:"+JSON.stringify(data));
+	try {
+		logger.debug("addFlashcard inside Try");
+		if (typeof data.flashcard === 'undefined' || data.flashcard == null) {
+			throw new Error("Flashcard is empty");
 		}
-	};
+		const postData = qs.stringify(data);
 
-	bot.reply(message, getLocation(url));
+		logger.info(JSON.stringify(postData));
+		const response = await axios.post(url, postData);
+		logger.info(JSON.stringify(response.data));
+		if (response.data.success) {
+			return "Added! " + JSON.stringify(response.data);
+		} else {
+			return "Failed :( Err: " + JSON.stringify(response.data);
+		}
+	} catch (error) {
+		logger.error(JSON.stringify(error));
+	}
+};
 
-	console.log('Test±');
+controller.hears(['add'], 'direct_message', async function (bot, message) {
+	logger.debug(message);
+
+	let msg = await addFlashcard(url, {
+		'flashcard': message.text.substring(4),
+		'deck': currentDeck,
+		'user': message.user,
+	});
+	bot.reply(message, msg);
 });
 
-/*
-TODO:
 
-1. Convert flashcards app to API endpoint just to add into dynamoDB
-2. 
+controller.hears(['Submit bulk'], 'direct_message', async function (bot, message) {
+	logger.debug(message);
+
+	// TODO Add waiting for a message
+	let msg = message.text.split('\n').map(async flashcard => {
+		return await addFlashcard(url, {
+			'flashcard': flashcard,
+			'deck': currentDeck,
+			'user': message.user,
+		});
+	});
+	bot.reply(message, msg.join('\n')+JSON.stringify(msg));
+});
 
 
 
