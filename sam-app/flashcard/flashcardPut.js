@@ -3,7 +3,7 @@ const AWS = require('aws-sdk'); // eslint-disable-line import/no-unresolved
 let response;
 const tableName = process.env.DYNAMO_TABLE;
 
-const getDeckName = event => (typeof event.queryStringParameters.deck === 'undefined' ? 'Default' : event.queryStringParameters.deck);
+const getDeckName = event => (event.queryStringParameters == null || typeof event.queryStringParameters.deck === 'undefined' ? 'Default' : event.queryStringParameters.deck);
 
 const saveFlashcardsToDynamoDb = async (cards, event) => {
   const json = {
@@ -13,21 +13,19 @@ const saveFlashcardsToDynamoDb = async (cards, event) => {
   };
 
   const deck = getDeckName(event);
+  const currentTimestamp = Date.now();
 
-  console.log('stackFlashcards');
-  cards.forEach((card) => {
+  cards.forEach((card, i) => {
     const side0 = card[0];
     const side1 = (typeof card[1] === 'undefined' || card[1].length === 0 ? ' ' : card[1]);
     if (side0) {
       const addNoteData = {
         PutRequest: {
           Item: {
-            uuid: { S: `a${Math.random()}av` },
             deck: { S: deck },
-            date_added: { S: new Date().toISOString() },
+            create_timestamp: { N: (currentTimestamp + i).toString() },
             side0: { S: side0 },
             side1: { S: side1 },
-            tags: { S: 'os_flashcards' },
           },
         },
       };
@@ -67,7 +65,10 @@ exports.lambdaHandler = async (event) => {
     };
   } catch (err) {
     console.log(err);
-    return err;
+    response = {
+      statusCode: 500,
+      body: JSON.stringify(err, Object.getOwnPropertyNames(err)),
+    };
   }
 
   return response;

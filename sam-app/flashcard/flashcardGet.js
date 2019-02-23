@@ -11,13 +11,14 @@ const getDBResults = async (event) => {
 
   const params = {
     TableName: tableName,
-    FilterExpression: 'deck = :deck',
+    KeyConditionExpression: 'deck = :deck AND create_timestamp > :last_timestamp',
     ExpressionAttributeValues: {
       ':deck': getDeckName(event),
+      ':last_timestamp': Date.now() - 1000 * 60 * 60 * 24 * 7,
     },
   };
 
-  return docClient.scan(params).promise();
+  return docClient.query(params).promise();
 };
 
 const convertDynamodbJsonToJson = dynamodbJson => dynamodbJson.Items.map((item) => {
@@ -55,21 +56,27 @@ const convertJsonToAnkiJson = json => ({
 
 exports.lambdaHandler = async (event) => {
   console.log(event);
+
+  const startTimestamp = new Date();
   try {
     const dynamodbResult = await getDBResults(event);
     console.log(dynamodbResult);
-    const flashcardJson = convertDynamodbJsonToJson(dynamodbResult);
+    const result = convertJsonToAnkiJson(convertDynamodbJsonToJson(dynamodbResult));
+    result.executionTimeMs = new Date() - startTimestamp;
 
     switch (getRequestedOutput(event)) {
       case 'anki':
       default:
         return {
           statusCode: 200,
-          body: JSON.stringify(convertJsonToAnkiJson(flashcardJson)),
+          body: JSON.stringify(result),
         };
     }
   } catch (err) {
     console.log(err);
-    return err;
+    return {
+      statusCode: 500,
+      body: JSON.stringify(err, Object.getOwnPropertyNames(err))
+    };
   }
 };

@@ -11,7 +11,6 @@ Globals: # any parameters you want available to all your resources
                 DYNAMO_TABLE: !Ref DynamoFlashcardTable
                 DB_ENDPOINT: http://dynamodb.us-east-1.amazonaws.com
                 REGION_NAME: eu-west-1
-
 Resources:
     FlashcardsGetFunction:
         Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -50,13 +49,26 @@ Resources:
                         Path: /csvExport
                         Method: get
     DynamoFlashcardTable:
-        Type: AWS::Serverless::SimpleTable # if you want to define a more complex table, use AWS::DynamoDB::Table
+        Type: AWS::DynamoDB::Table # if you want to define a more complex table, use AWS::DynamoDB::Table
         Properties:
-            PrimaryKey:
-                Name: uuid
-                Type: String
+            AttributeDefinitions: 
+                - 
+                    AttributeName: "deck"
+                    AttributeType: "S"
+                - 
+                    AttributeName: "create_timestamp"
+                    AttributeType: "N"
+            KeySchema:
+                -
+                    AttributeName: "deck"
+                    KeyType: "HASH"
+                -
+                    AttributeName: "create_timestamp"
+                    KeyType: "RANGE"
             ProvisionedThroughput:
                 ReadCapacityUnits: 1
                 WriteCapacityUnits: 1
-            Tags:
-                AppType: Serverless
+Outputs:
+  ProdEndpoint:
+    Description: "API Prod endpoint"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
