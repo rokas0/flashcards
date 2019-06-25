@@ -35,9 +35,10 @@ const pushFlashcards = async (deck) => {
 
 const saveFlashcards = async (flashcards, deck) => {
   let res;
+  const flashcardsString = flashcards.join('\n');
   try {
     res = await rp.put(endpointUrlSource, {
-      body: flashcards.join('\n'),
+      body: flashcardsString,
       qs: {
         deck,
       },
@@ -45,7 +46,7 @@ const saveFlashcards = async (flashcards, deck) => {
   } catch (err) {
     console.log(`API ERROR: ${err}`);
   }
-  console.log(flashcards);
+  console.log(flashcardsString);
   console.log(`API response:${res}`);
   pushFlashcards(deck);
   // TODO Save + sync with Anki
