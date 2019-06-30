@@ -4,14 +4,69 @@ Description: "SAM APP"
 
 Globals: # any parameters you want available to all your resources
     Function:
-        Runtime: nodejs8.10 # language used at runtime
+        Runtime: nodejs10.x # language used at runtime
         Timeout: 180 # timeout for a given lambda function execution
         Environment:
             Variables: # these will be important later
+                SQS_FLASHCARD_JSON: !Ref FlashcardJSON
+                SQS_FLASHCARDS_CSV: !Ref FlashcardsCSV
                 DYNAMO_TABLE: !Ref DynamoFlashcardTable
                 DB_ENDPOINT: http://dynamodb.us-east-1.amazonaws.com
                 REGION_NAME: eu-west-1
 Resources:
+    getRawTextFromEmailAndPushToSqs:
+        Type: 'AWS::Serverless::Function'
+        Properties:
+            Handler: index.handler
+            CodeUri: get-raw-text-from-email-and-push-to-sqs
+            Description: ''
+            MemorySize: 128
+            Timeout: 30
+            Policies:
+                - AmazonS3ReadOnlyAccess
+                - AmazonSQSFullAccess
+            Events:
+                sqs:
+                    Type: SQS
+                    Properties:
+                        Queue: arn:aws:sqs:us-west-2:012345678901:my-queue # NOTE: FIFO SQS Queues are not yet supported
+                        BatchSize: 1
+                        Enabled: false
+    splitCsvToJsonAndPushToSqs:
+        Type: 'AWS::Serverless::Function'
+        Properties:
+            Handler: index.handler
+            CodeUri: split-csv-to-json-and-push-to-sqs
+            Description: ''
+            MemorySize: 128
+            Timeout: 30
+            Policies:
+                - AmazonSQSFullAccess
+            Events:
+                sqs:
+                    Type: SQS
+                    Properties:
+                        Queue: !Ref FlashcardsCSV
+                        BatchSize: 1
+                        Enabled: false
+    putToDynamodb:
+        Type: 'AWS::Serverless::Function'
+        Properties:
+            Handler: index.handler
+            CodeUri: put-to-dynamodb
+            Description: ''
+            MemorySize: 128
+            Timeout: 30
+            Policies:
+                - AmazonSQSFullAccess
+                - AmazonDynamoDBFullAccess
+            Events:
+                sqs:
+                    Type: SQS
+                    Properties:
+                        Queue: !Ref FlashcardJSON
+                        BatchSize: 1
+                        Enabled: false
     FlashcardsGetFunction:
         Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
         Properties:
@@ -48,6 +103,10 @@ Resources:
                     Properties:
                         Path: /csvExport
                         Method: get
+    FlashcardsCSV:
+        Type: AWS::SQS::Queue
+    FlashcardJSON:
+        Type: AWS::SQS::Queue
     DynamoFlashcardTable:
         Type: AWS::DynamoDB::Table # if you want to define a more complex table, use AWS::DynamoDB::Table
         Properties:

@@ -1,0 +1,14 @@
+{
+  "name": "test-email-parsing",
+  "version": "1.0.0",
+  "description": "",
+  "main": "test-email-parse.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "mailparser": "^2.7.1"
+  }
+}
