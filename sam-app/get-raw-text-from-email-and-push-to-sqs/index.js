@@ -1,8 +1,11 @@
+'use strict';
+
 const AWS = require('aws-sdk');
 const s3 = new AWS.S3();
 const sqs = new AWS.SQS();
 const bucketName = 'anki-at-rokaso.com';
 const simpleParser = require('mailparser').simpleParser;
+const htmlToText = require('html-to-text');
 
 exports.handler = async (event) => {
     console.log(JSON.stringify(event));
@@ -14,18 +17,16 @@ exports.handler = async (event) => {
         }).promise();
 
     let parsed = await simpleParser(data.Body);
+ 
+    const textEmail = htmlToText.fromString(parsed.html, {
+        wordwrap: false
+    });
 
     var params = {
-        MessageBody: JSON.stringify({ text: parsed.text, subject: parsed.subject }),
-        QueueUrl: 'https://sqs.eu-west-1.amazonaws.com/815840080813/flashcard-process',
+        MessageBody: JSON.stringify({ text: textEmail, subject: parsed.subject }),
+        QueueUrl: process.env.SQS_FLASHCARDS_CSV,
     };
 
     const resultSqs = await sqs.sendMessage(params).promise();
-
-    // TODO Return actual response to SES
-    const response = {
-        statusCode: 200,
-        body: JSON.stringify(resultSqs),
-    };
-    return response;
+    console.log(resultSqs);
 };

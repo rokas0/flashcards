@@ -21,17 +21,10 @@ Resources:
             CodeUri: get-raw-text-from-email-and-push-to-sqs
             Description: ''
             MemorySize: 128
-            Timeout: 30
+            Tracing: 'Active'
             Policies:
                 - AmazonS3ReadOnlyAccess
                 - AmazonSQSFullAccess
-            Events:
-                sqs:
-                    Type: SQS
-                    Properties:
-                        Queue: arn:aws:sqs:us-west-2:012345678901:my-queue # NOTE: FIFO SQS Queues are not yet supported
-                        BatchSize: 1
-                        Enabled: false
     splitCsvToJsonAndPushToSqs:
         Type: 'AWS::Serverless::Function'
         Properties:
@@ -39,16 +32,16 @@ Resources:
             CodeUri: split-csv-to-json-and-push-to-sqs
             Description: ''
             MemorySize: 128
-            Timeout: 30
+            Tracing: 'Active'
             Policies:
                 - AmazonSQSFullAccess
             Events:
                 sqs:
                     Type: SQS
                     Properties:
-                        Queue: !Ref FlashcardsCSV
+                        Queue: !GetAtt FlashcardsCSV.Arn
                         BatchSize: 1
-                        Enabled: false
+                        Enabled: true
     putToDynamodb:
         Type: 'AWS::Serverless::Function'
         Properties:
@@ -56,7 +49,7 @@ Resources:
             CodeUri: put-to-dynamodb
             Description: ''
             MemorySize: 128
-            Timeout: 30
+            Tracing: 'Active'
             Policies:
                 - AmazonSQSFullAccess
                 - AmazonDynamoDBFullAccess
@@ -64,9 +57,9 @@ Resources:
                 sqs:
                     Type: SQS
                     Properties:
-                        Queue: !Ref FlashcardJSON
+                        Queue: !GetAtt FlashcardJSON.Arn
                         BatchSize: 1
-                        Enabled: false
+                        Enabled: true
     FlashcardsGetFunction:
         Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
         Properties:
@@ -82,7 +75,7 @@ Resources:
     FlashcardsPutFunction:
         Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
         Properties:
-            CodeUri: flashcard/
+            CodeUri: flashcard
             Handler: flashcardPut.lambdaHandler
             Policies: AmazonDynamoDBFullAccess
             Events:
@@ -94,7 +87,7 @@ Resources:
     FlashcardsCsvFunction:
         Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
         Properties:
-            CodeUri: flashcard/
+            CodeUri: flashcard
             Handler: csvExport.lambdaHandler
             Policies: AmazonDynamoDBFullAccess
             Events:
@@ -103,10 +96,22 @@ Resources:
                     Properties:
                         Path: /csvExport
                         Method: get
+    FlashcardsCSVDLQ:
+        Type: AWS::SQS::Queue
     FlashcardsCSV:
+        Type: AWS::SQS::Queue
+        Properties:
+            RedrivePolicy:
+                deadLetterTargetArn: !GetAtt FlashcardsCSVDLQ.Arn
+                maxReceiveCount: 3
+    FlashcardJSONDLQ:
         Type: AWS::SQS::Queue
     FlashcardJSON:
         Type: AWS::SQS::Queue
+        Properties:
+            RedrivePolicy:
+                deadLetterTargetArn: !GetAtt FlashcardJSONDLQ.Arn
+                maxReceiveCount: 3
     DynamoFlashcardTable:
         Type: AWS::DynamoDB::Table # if you want to define a more complex table, use AWS::DynamoDB::Table
         Properties:

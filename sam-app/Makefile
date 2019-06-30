@@ -1,7 +1,10 @@
-STACK_NAME?=flashcards5
-AWS_PROFILE?=os
+STACK_NAME?=flashcards7
+AWS_PROFILE?=sam
 AWS_REGION?=eu-west-1
 S3_BUCKET_PACKAGED?=rokaso-sam-package
+
+lintfix:
+	./node_modules/.bin/eslint ./*/index.js 
 
 build:
 	sam build --region ${AWS_REGION}
@@ -15,4 +18,4 @@ deploy:
 describe:
 	aws cloudformation describe-stacks --stack-name ${STACK_NAME} --profile ${AWS_PROFILE} --output text
 
-all: build package deploy describe
+all: lintfix build package deploy describe

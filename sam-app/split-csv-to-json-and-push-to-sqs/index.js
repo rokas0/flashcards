@@ -1,52 +1,45 @@
-const AWS = require('aws-sdk'); // eslint-disable-line import/no-unresolved
+const AWS = require('aws-sdk');
 const sqs = new AWS.SQS();
 
 let response;
-const getDeckName = event => (event.queryStringParameters == null || typeof event.queryStringParameters.deck === 'undefined' ? 'Default' : event.queryStringParameters.deck);
+const getDeckName = subject => (['', 'default'].includes(subject.trim().toLowerCase()) ? 'Default' : subject);
 
 const convertTripleHyphenSeparatedStringToArray = inputString => inputString.split('---');
 
 const convertNewLineSeparatedStringToArray = inputString => inputString.split('\n');
 
 
-exports.lambdaHandler = async (event) => {
-  console.log(event);
-  
-	try {
-    const body = event.Records[0].body;
-    const input = convertNewLineSeparatedStringToArray(body)
-			.map(line => convertTripleHyphenSeparatedStringToArray(line));
+exports.handler = async (event) => {
+	console.log(event);
 
-		const deck = 'Default'; // TODO Update this to get from the event
+	const body = JSON.parse(event.Records[0].body);
+	const text = body.text;
+	const input = convertNewLineSeparatedStringToArray(text)
+		.map(line => convertTripleHyphenSeparatedStringToArray(line));
 
-		console.log(input);
+	const deck = getDeckName(body.subject); // TODO Update this to get from the event
 
-		input.forEach((card) => {
-			const side0 = card[0];
-			const side1 = (typeof card[1] === 'undefined' || card[1].length === 0 ? ' ' : card[1]);
-			if (side0) {
-				const row = {
-					side0,
-					side1,
-					deck
-				}
+	console.log(input);
 
-				let params = {
-					MessageBody: JSON.stringify({
-						row
-					}),
-					QueueUrl: 'https://sqs.eu-west-1.amazonaws.com/815840080813/flashcard-process-csv',
-				};
-				sqs.sendMessage(params).promise();
-			}
-		});
-	} catch (err) {
-		console.log(err);
-		response = {
-			statusCode: 500,
-			body: JSON.stringify(err, Object.getOwnPropertyNames(err)),
-		};
-	}
+	await Promise.all(input.map(card => {
+		const side0 = card[0];
+		const side1 = (typeof card[1] === 'undefined' || card[1].length === 0 ? ' ' : card[1]);
+		if (side0) {
+			const row = {
+				side0,
+				side1,
+				deck
+			};
+
+			let params = {
+				MessageBody: JSON.stringify(row),
+				QueueUrl: process.env.SQS_FLASHCARD_JSON,
+			};
+			console.log(params);
+			return sqs.sendMessage(params).promise();
+		}
+		return null;
+	}));
 
 	return response;
 };
