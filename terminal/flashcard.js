@@ -1,7 +1,7 @@
 const rp = require('request-promise');
 const readline = require('readline');
 
-const endpointUrlSource = 'https://gc33dd21dj.execute-api.eu-west-1.amazonaws.com/Prod/flashcard';
+const endpointUrlSource = 'https://7ntv8cw9u1.execute-api.eu-west-1.amazonaws.com/Prod/flashcard';
 const endpointUrlSink = 'http://localhost:8765';
 const syncSavePeriodMs = 20000;
 
